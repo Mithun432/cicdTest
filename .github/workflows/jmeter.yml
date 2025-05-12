@@ -1,0 +1,42 @@
+name: JMeter Performance Test
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  run-jmeter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set Up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Install JMeter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
+          wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.zip
+          unzip apache-jmeter-5.6.3.zip
+          echo "$(pwd)/apache-jmeter-5.6.3/bin" >> $GITHUB_PATH
+
+      - name: Run JMeter Test
+        env:
+          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: |
+          mkdir -p results report
+          jmeter -n -t test-plan.jmx -p user.properties -l results/result.jtl -e -o report/
+
+      - name: Upload HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jmeter-html-report
+          path: report/
