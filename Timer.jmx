@@ -1041,18 +1041,19 @@ log.info(&quot;Email sent successfully.&quot;)
 import javax.mail.*
 import javax.mail.internet.*
 
-String host = &quot;smtp.gmail.com&quot;
-String port = &quot;587&quot;
-String username = &quot;dtester910@gmail.com&quot;
-String password = &quot;qupr agep qink dcoz&quot;  // App Password
+String host = "smtp.gmail.com"
+String port = "587"
+String username = props.get("email.username")
+String password = props.get("email.password")
+String recipient = props.get("email.recipient")
 
-Properties props = new Properties()
-props.put(&quot;mail.smtp.auth&quot;, &quot;true&quot;)
-props.put(&quot;mail.smtp.starttls.enable&quot;, &quot;true&quot;)
-props.put(&quot;mail.smtp.host&quot;, host)
-props.put(&quot;mail.smtp.port&quot;, port)
+Properties mailProps = new Properties()
+mailProps.put("mail.smtp.auth", "true")
+mailProps.put("mail.smtp.starttls.enable", "true")
+mailProps.put("mail.smtp.host", host)
+mailProps.put("mail.smtp.port", port)
 
-Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+Session session = Session.getInstance(mailProps, new javax.mail.Authenticator() {
     protected PasswordAuthentication getPasswordAuthentication() {
         return new PasswordAuthentication(username, password)
     }
@@ -1061,16 +1062,16 @@ Session session = Session.getInstance(props, new javax.mail.Authenticator() {
 try {
     Message message = new MimeMessage(session)
     message.setFrom(new InternetAddress(username))
-    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(&quot;mrpesakku@gmail.com&quot;))
-    message.setSubject(&quot;JMeter Test Execution Completed&quot;)
-    message.setText(&quot;Hello Mithun, Your JMeter test has completed execution successfully.\n\nRegards,\nJMeter&quot;)
+    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient))
+    message.setSubject("JMeter Test Completed")
+    message.setText("Hi Mithun,\n\nYour test finished successfully.\n\nRegards,\nCI Bot")
 
     Transport.send(message)
-    log.info(&quot;Email sent successfully.&quot;)
+    log.info("✅ Email sent.")
 } catch (MessagingException e) {
-    log.error(&quot;❌ Email sending failed: &quot; + e.message)
-    e.printStackTrace()  // Add this to see the full exception in logs
+    log.error("❌ Failed to send email: " + e.message)
 }
+
 </stringProp>
           <stringProp name="scriptLanguage">groovy</stringProp>
         </JSR223Sampler>
