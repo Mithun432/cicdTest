@@ -10,26 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
+    - name: 📥 Checkout code
       uses: actions/checkout@v4
 
-    - name: Install JMeter
+    - name: 🛠 Install JMeter
       run: |
         sudo apt-get update
         sudo apt-get install -y wget unzip openjdk-11-jre
-        wget https://downloads.apache.org//jmeter/binaries/apache-jmeter-5.6.3.zip
+        wget https://downloads.apache.org/jmeter/binaries/apache-jmeter-5.6.3.zip
         unzip apache-jmeter-5.6.3.zip
-        export JMETER_HOME=$PWD/apache-jmeter-5.6.3
-        echo "$JMETER_HOME/bin" >> $GITHUB_PATH
+        echo "$PWD/apache-jmeter-5.6.3/bin" >> $GITHUB_PATH
 
-    - name: Install JMeter Plugins Manager + Dummy Sampler
+    - name: 🔌 Install JMeter Plugins Manager + Dummy Sampler
       run: |
+        # Download plugins manager
         wget https://jmeter-plugins.org/get/ -O plugins-manager.jar
         mv plugins-manager.jar apache-jmeter-5.6.3/lib/ext/
+
+        # Download required cmdrunner jar
+        wget https://repo1.maven.org/maven2/kg/apc/cmdrunner/2.3/cmdrunner-2.3.jar -O apache-jmeter-5.6.3/lib/cmdrunner-2.3.jar
+
+        # Install PluginManagerCMD
         java -cp apache-jmeter-5.6.3/lib/ext/plugins-manager.jar org.jmeterplugins.repository.PluginManagerCMDInstaller
+
+        # Install the Dummy Sampler plugin
         apache-jmeter-5.6.3/bin/PluginsManagerCMD.sh install jpgc-dummy
 
-    - name: Run JMeter Test
+    - name: 🚀 Run JMeter Test Plan
       run: |
         mkdir -p results report
-        apache-jmeter-5.6.3/bin/jmeter -n -t Timer.jmx -l results/results.jtl -e -o report/
+        apache-jmeter-5.6.3/bin/jmeter -n -t Timer.jmx -l results/results.jtl -e -o report
