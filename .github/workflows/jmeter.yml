@@ -1,42 +1,35 @@
-name: JMeter Performance Test
+name: Run JMeter Test with Plugins
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:  # Allows manual trigger
+    branches:
+      - main
 
 jobs:
-  run-jmeter:
+  jmeter_test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Set Up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '11'
+    - name: Install JMeter
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget unzip openjdk-11-jre
+        wget https://downloads.apache.org//jmeter/binaries/apache-jmeter-5.6.3.zip
+        unzip apache-jmeter-5.6.3.zip
+        export JMETER_HOME=$PWD/apache-jmeter-5.6.3
+        echo "$JMETER_HOME/bin" >> $GITHUB_PATH
 
-      - name: Install JMeter
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget unzip
-          wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.zip
-          unzip apache-jmeter-5.6.3.zip
-          echo "$(pwd)/apache-jmeter-5.6.3/bin" >> $GITHUB_PATH
+    - name: Install JMeter Plugins Manager + Dummy Sampler
+      run: |
+        wget https://jmeter-plugins.org/get/ -O plugins-manager.jar
+        mv plugins-manager.jar apache-jmeter-5.6.3/lib/ext/
+        java -cp apache-jmeter-5.6.3/lib/ext/plugins-manager.jar org.jmeterplugins.repository.PluginManagerCMDInstaller
+        apache-jmeter-5.6.3/bin/PluginsManagerCMD.sh install jpgc-dummy
 
-      - name: Run JMeter Test
-        env:
-          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-        run: |
-          mkdir -p results report
-          jmeter -n -t Timer.jmx -p user.properties -l results/result.jtl -e -o report/
-
-      - name: Upload HTML Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: jmeter-html-report
-          path: report/
+    - name: Run JMeter Test
+      run: |
+        mkdir -p results report
+        apache-jmeter-5.6.3/bin/jmeter -n -t Timer.jmx -l results/results.jtl -e -o report/
