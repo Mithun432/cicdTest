@@ -33,7 +33,7 @@ jobs:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: |
           mkdir -p results report
-          jmeter -n -t test-plan.jmx -p user.properties -l results/result.jtl -e -o report/
+          jmeter -n -t Timer.jmx -p user.properties -l results/result.jtl -e -o report/
 
       - name: Upload HTML Report
         uses: actions/upload-artifact@v4
